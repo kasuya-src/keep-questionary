@@ -5,12 +5,12 @@ import { QuestionnaireSchema } from "./schema";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCqM_k3F0_KiezoaoYshtC7NSCDsRIpuCM",
-  authDomain: "keepcast.firebaseapp.com",
-  projectId: "keepcast",
-  storageBucket: "keepcast.firebasestorage.app",
-  messagingSenderId: "446279303752",
-  appId: "1:446279303752:web:008b53a2f9148ededfce7d"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
