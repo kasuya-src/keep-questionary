@@ -18,5 +18,5 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEEPCAST }}
           projectId: keepcast
-          env:
+        env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
