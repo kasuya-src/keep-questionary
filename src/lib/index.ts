@@ -14,6 +14,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+console.log("Project ID:", firebaseConfig.projectId)
+
 const db = getFirestore(app);
 
 export async function saveFormData(data: unknown) {
