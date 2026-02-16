@@ -423,35 +423,34 @@
     async function handleSubmit(event: SubmitEvent) {
         event.preventDefault();
         if (isSubmitting) return;
-        const parsed = QuestionnaireSchema.safeParse(formdata);
-        if (!parsed.success) {
-            formErrors = parsed.error.flatten().fieldErrors;
-            if (formErrors.meate) openSectionName = 'meate';
-            else if (formErrors.nowang) openSectionName = 'nowang';
-            else if (formErrors.futureang) openSectionName = 'futureang';
-            else if (formErrors.look) openSectionName = 'look';
-            scrollToField(Object.keys(formErrors)[0]);
-            return;
-        }
+
         isSubmitting = true;
-        // ★元の保存ロジックを復元
+        console.log("送信処理開始...");
+
         try {
-            const createdAt = new Date().getTime();
-            const updatedData = { ...$localdata, isSubmit: true, time: createdAt };
+            // ローカル保存
+            const now = new Date().getTime();
+            const lastnum = String(now).substring(3, 9);
+            const updatedData = { ...$localdata, isSubmit: true, time: now, lotteryNo: lastnum };
             localdata.set(updatedData);
             localStorage.setItem("user", JSON.stringify(updatedData));
+            console.log("ローカル保存完了:", lastnum);
 
-            const result = await saveFormData(parsed.data);
+            // サーバー保存
+            console.log("Firebaseへ送信中...");
+            const result = await saveFormData(formdata); // ここで止まっている可能性大
+            
+            console.log("サーバー応答:", result);
             if (result.success) {
                 pageNo.set(2);
             } else {
-                alert("データの保存に失敗しました");
-                isSubmitting = false; // 失敗時は再度押せるようにする
+                alert("サーバー側で失敗しました: " + (result.error || "詳細不明"));
+                isSubmitting = false;
             }
         } catch (e) {
-            console.error(e);
-            alert("エラーが発生しました");
-            isSubmitting = false; // エラー時も再度押せるようにする
+            console.error("致命的なエラー発生:", e);
+            alert("エラーが発生しました: " + e.message);
+            isSubmitting = false;
         }
     }
 
