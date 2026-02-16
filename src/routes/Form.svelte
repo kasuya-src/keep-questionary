@@ -542,28 +542,62 @@
                 </div>
                 {/each}
             </div>
-
             {#each [
-                {id:'meate', label:'お目当て（必須）', color:'blue', bgColor:'bg-blue-50', select:selectMeate, group:'meate'}, 
-                {id:'nowang', label:'今やっている釣り（必須）', color:'emerald', bgColor:'bg-green-50', select:selectAng, group:'nowang'}, 
-                {id:'futureang', label:'やってみたい釣り（必須）', color:'orange', bgColor:'bg-orange-50', select:selectAng, group:'futureang'}
+                {
+                    id:'meate', 
+                    label:'お目当て（必須）', 
+                    colorClass: 'text-blue-500', 
+                    activeBg: 'bg-blue-600', 
+                    activeBorder: 'border-blue-600', 
+                    badgeClass: 'bg-blue-100 text-blue-600',
+                    bgColor:'bg-blue-50', 
+                    arrowClass: 'text-blue-500',
+                    select:selectMeate, 
+                    group:'meate'
+                }, 
+                {
+                    id:'nowang', 
+                    label:'今やっている釣り（必須）', 
+                    colorClass: 'text-emerald-500', 
+                    activeBg: 'bg-emerald-600', 
+                    activeBorder: 'border-emerald-600', 
+                    badgeClass: 'bg-emerald-100 text-emerald-600',
+                    bgColor:'bg-green-50', 
+                    arrowClass: 'text-emerald-500',
+                    select:selectAng, 
+                    group:'nowang'
+                }, 
+                {
+                    id:'futureang', 
+                    label:'やってみたい釣り（必須）', 
+                    colorClass: 'text-orange-500', 
+                    activeBg: 'bg-orange-600', 
+                    activeBorder: 'border-orange-600', 
+                    badgeClass: 'bg-orange-100 text-orange-600',
+                    bgColor:'bg-orange-50', 
+                    arrowClass: 'text-orange-500',
+                    select:selectAng, 
+                    group:'futureang'
+                }
             ] as section}
             <div data-field={section.id} class="border-t border-slate-100 pt-3">
                 <button type="button" onclick={() => toggleSection(section.id)} class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold {formErrors[section.id] ? 'text-red-500 animate-pulse' : `text-${section.color}-500`}">
+                        <span class="text-xs font-bold {formErrors[section.id] ? 'text-red-500 animate-pulse' : section.colorClass}">
                             {section.label} 
                         </span>
                         {#if (formdata[section.group as keyof typeof formdata] as any[]).length > 0}
-                            <span class="bg-{section.color}-100 text-{section.color}-600 text-[11px] px-2 py-0.5 rounded-full font-bold">{(formdata[section.group as keyof typeof formdata] as any[]).length}</span>
+                            <span class="{section.badgeClass} text-[11px] px-2 py-0.5 rounded-full font-bold">
+                                {(formdata[section.group as keyof typeof formdata] as any[]).length}
+                            </span>
                         {/if}
                     </div>
-                    <span class="text-slate-300 transition-transform {openSectionName === section.id ? `rotate-180 text-${section.color}-500` : ''}">▼</span>
+                    <span class="text-slate-300 transition-transform {openSectionName === section.id ? `rotate-180 ${section.arrowClass}` : ''}">▼</span>
                 </button>
                 {#if openSectionName === section.id}
                     <div class="grid grid-cols-2 gap-1.5 mt-2 {section.bgColor} p-1 rounded-xl">
                         {#each section.select as elm}
-                            <label class="flex items-center justify-center py-2.5 px-0 rounded-xl border text-center transition-all {elm.length > 10 && section.id !== 'meate' ? 'col-span-2' : ''} {(formdata[section.group as keyof typeof formdata] as any[]).includes(elm) ? `bg-${section.color}-600 border-${section.color}-600 text-white shadow-sm` : 'bg-white border-slate-200 text-slate-500'}">
+                            <label class="flex items-center justify-center py-2.5 px-0 rounded-xl border text-center transition-all {elm.length > 10 && section.id !== 'meate' ? 'col-span-2' : ''} {(formdata[section.group as keyof typeof formdata] as any[]).includes(elm) ? `${section.activeBg} ${section.activeBorder} text-white shadow-sm` : 'bg-white border-slate-200 text-slate-500'}">
                                 <input type="checkbox" value={elm} bind:group={formdata[section.group as 'meate'|'nowang'|'futureang']} onchange={() => clearError(section.group)} class="sr-only" />
                                 <span class="font-bold leading-none whitespace-nowrap {elm.length > 25 ? 'text-[10px]' : elm.length > 18 ? 'text-[11px]' : elm.length > 8 ? 'text-[12px]' : 'text-sm'}">
                                     {elm}
