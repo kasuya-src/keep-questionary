@@ -424,31 +424,48 @@
         event.preventDefault();
         if (isSubmitting) return;
 
+        // 【追加】送信前にSchemaでバリデーション
+        const result = QuestionnaireSchema.safeParse(formdata);
+        if (!result.success) {
+            const errors: any = {};
+            result.error.issues.forEach((issue) => {
+                errors[issue.path[0]] = issue.message;
+            });
+            formErrors = errors;
+
+            // 最初のエラー項目へスクロール
+            const firstErrorField = result.error.issues[0].path[0] as string;
+            if (['meate', 'nowang', 'futureang', 'look'].includes(firstErrorField)) {
+                openSectionName = firstErrorField;
+            }
+            scrollToField(firstErrorField);
+            return;
+        }
+
         isSubmitting = true;
-        console.log("送信処理開始...");
+   
 
         try {
-            // ローカル保存
+            // ローカル保存 (ロジック維持)
             const now = new Date().getTime();
             const lastnum = String(now).substring(3, 9);
             const updatedData = { ...$localdata, isSubmit: true, time: now, lotteryNo: lastnum };
             localdata.set(updatedData);
             localStorage.setItem("user", JSON.stringify(updatedData));
-            console.log("ローカル保存完了:", lastnum);
+        
 
             // サーバー保存
-            console.log("Firebaseへ送信中...");
-            const result = await saveFormData(formdata); // ここで止まっている可能性大
+
+            const saveResult = await saveFormData(formdata); 
             
-            console.log("サーバー応答:", result);
-            if (result.success) {
+   
+            if (saveResult.success) {
                 pageNo.set(2);
             } else {
-                alert("サーバー側で失敗しました: " + (result.error || "詳細不明"));
+                alert("サーバー側で失敗しました: " + (saveResult.error || "詳細不明"));
                 isSubmitting = false;
             }
-        } catch (e) {
-            console.error("致命的なエラー発生:", e);
+        } catch (e: any) {
             alert("エラーが発生しました: " + e.message);
             isSubmitting = false;
         }
@@ -490,151 +507,117 @@
     }
 </script>
 
-<form onsubmit={handleSubmit} class="bg-slate-50 min-h-screen p-3 font-sans text-slate-800 pb-20">
-    <div class="max-w-md mx-auto space-y-4">
+<form onsubmit={handleSubmit} class="bg-slate-50 min-h-screen p-2 font-sans text-slate-800 pb-16">
+    <div class="max-w-md mx-auto space-y-3">
         
-        <div class="bg-linear-to-r from-yellow-400 to-orange-500 rounded-2xl p-4 text-white shadow-md text-center">
-             <h2 class="text-lg font-black leading-tight">アンケート回答で<br><span class="text-2xl">抽選番号ゲット！</span></h2>
+        <div class="bg-linear-to-r from-yellow-400 to-orange-500 rounded-xl p-3 text-white shadow-md text-center">
+             <h2 class="text-base font-black leading-tight">アンケート回答で<br><span class="text-xl">抽選番号ゲット！</span></h2>
         </div>
 
-        <div class="text-center py-1">
-            <h1 class="text-xl font-black text-blue-600 italic tracking-tighter">KEEPCAST 2026</h1>
+        <div class="text-center py-0.5">
+            <h1 class="text-lg font-black text-blue-600 italic tracking-tighter">KEEPCAST 2026</h1>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-4">
             
-            <div class="grid grid-cols-2 gap-3">
-                {#each [{l:'年代', f:'age', s:selectAge}, {l:'性別', f:'gender', s:selectGender}, {l:'地域', f:'area', s:selectArea}, {l:'釣歴', f:'history', s:selectHistory}] as item}
-                <div data-field={item.f} class="space-y-1">
-                    <span class="text-[11px] font-bold {formErrors[item.f as keyof FormErrors] ? 'text-red-500' : 'text-slate-400'} ml-1">{item.l}</span>
-                    <select bind:value={(formdata as any)[item.f]} onchange={() => clearError(item.f)} class="w-full bg-slate-50 border-none p-3 rounded-2xl text-xs font-bold appearance-none">
-                        <option value="">選択</option>
-                        {#each item.s as opt}<option value={opt}>{opt}</option>{/each}
+            <div class="grid grid-cols-2 gap-2">
+                {#each [
+                    {l:'年代', f:'age', s:selectAge}, 
+                    {l:'性別', f:'gender', s:selectGender}, 
+                    {l:'地域', f:'area', s:selectArea}, 
+                    {l:'釣歴', f:'history', s:selectHistory}
+                ] as item}
+                <div data-field={item.f} class="space-y-0.5">
+                    <span class="text-xs font-bold {formErrors[item.f as keyof FormErrors] ? 'text-red-500' : 'text-slate-400'} ml-1">{item.l}</span>
+                    <select 
+                        bind:value={formdata[item.f as 'age'|'gender'|'area'|'history']} 
+                        onchange={() => clearError(item.f)} 
+                        class="w-full bg-slate-100 border-none p-2.5 rounded-xl text-sm font-bold appearance-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="" disabled selected hidden>選択</option>
+                        {#each item.s as opt}
+                            <option value={opt}>{opt}</option>
+                        {/each}
                     </select>
                 </div>
                 {/each}
             </div>
 
-            <div data-field="meate" class="border-t border-slate-100 pt-4">
-                <button type="button" onclick={() => toggleSection('meate')} class="flex items-center justify-between w-full">
+            {#each [
+                {id:'meate', label:'お目当て（必須）', color:'blue', bgColor:'bg-blue-50', select:selectMeate, group:'meate'}, 
+                {id:'nowang', label:'今やっている釣り（必須）', color:'emerald', bgColor:'bg-green-50', select:selectAng, group:'nowang'}, 
+                {id:'futureang', label:'やってみたい釣り（必須）', color:'orange', bgColor:'bg-orange-50', select:selectAng, group:'futureang'}
+            ] as section}
+            <div data-field={section.id} class="border-t border-slate-100 pt-3">
+                <button type="button" onclick={() => toggleSection(section.id)} class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold {formErrors.meate ? 'text-red-500 animate-pulse' : 'text-blue-500'}">お目当て（必須）</span>
-                        {#if formdata.meate.length > 0}
-                            <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-bold">{formdata.meate.length}</span>
+                        <span class="text-xs font-bold {formErrors[section.id] ? 'text-red-500 animate-pulse' : `text-${section.color}-500`}">
+                            {section.label} 
+                        </span>
+                        {#if (formdata[section.group as keyof typeof formdata] as any[]).length > 0}
+                            <span class="bg-{section.color}-100 text-{section.color}-600 text-[11px] px-2 py-0.5 rounded-full font-bold">{(formdata[section.group as keyof typeof formdata] as any[]).length}</span>
                         {/if}
                     </div>
-                    <span class="text-slate-300 transition-transform {openSectionName === 'meate' ? 'rotate-180 text-blue-500' : ''}">▼</span>
+                    <span class="text-slate-300 transition-transform {openSectionName === section.id ? `rotate-180 text-${section.color}-500` : ''}">▼</span>
                 </button>
-                {#if openSectionName === 'meate'}
-                    <div class="grid grid-cols-2 gap-2 mt-3 bg-blue-50 p-1">
-                        {#each selectMeate as elm}
-                            <label class="flex items-center justify-center p-3 rounded-2xl border text-center transition-all {formdata.meate.includes(elm) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500'}">
-                                <input type="checkbox" value={elm} bind:group={formdata.meate} onchange={() => clearError("meate")} class="sr-only" />
-                                <span class="font-bold leading-tight whitespace-nowrap overflow-hidden {elm.length > 8 ? 'text-[9px]' : 'text-[11px]'}">{elm}</span>
+                {#if openSectionName === section.id}
+                    <div class="grid grid-cols-2 gap-1.5 mt-2 {section.bgColor} p-1 rounded-xl">
+                        {#each section.select as elm}
+                            <label class="flex items-center justify-center py-2.5 px-0 rounded-xl border text-center transition-all {elm.length > 10 && section.id !== 'meate' ? 'col-span-2' : ''} {(formdata[section.group as keyof typeof formdata] as any[]).includes(elm) ? `bg-${section.color}-600 border-${section.color}-600 text-white shadow-sm` : 'bg-white border-slate-200 text-slate-500'}">
+                                <input type="checkbox" value={elm} bind:group={formdata[section.group as 'meate'|'nowang'|'futureang']} onchange={() => clearError(section.group)} class="sr-only" />
+                                <span class="font-bold leading-none whitespace-nowrap {elm.length > 25 ? 'text-[10px]' : elm.length > 18 ? 'text-[11px]' : elm.length > 8 ? 'text-[12px]' : 'text-sm'}">
+                                    {elm}
+                                </span>
                             </label>
                         {/each}
                     </div>
                 {/if}
             </div>
+            {/each}
 
-            <div data-field="nowang" class="border-t border-slate-100 pt-4">
-                <button type="button" onclick={() => toggleSection('nowang')} class="flex items-center justify-between w-full">
-                    <div class="flex items-center gap-2 text-left">
-                        <span class="text-[11px] font-bold {formErrors.nowang ? 'text-red-500 animate-pulse' : 'text-emerald-500'}">今やっている釣り（必須）</span>
-                        {#if formdata.nowang.length > 0}
-                            <span class="bg-emerald-100 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold">{formdata.nowang.length}</span>
-                        {/if}
-                    </div>
-                    <span class="text-slate-300 transition-transform {openSectionName === 'nowang' ? 'rotate-180 text-emerald-500' : ''}">▼</span>
-                </button>
-                {#if openSectionName === 'nowang'}
-                    <div class="grid grid-cols-2 gap-2 mt-3 bg-green-50 p-1">
-                        {#each selectAng as elm}
-                            <label class="flex items-center justify-center p-3 rounded-2xl border text-center transition-all {elm.length > 10 ? 'col-span-2' : ''} {formdata.nowang.includes(elm) ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500'}">
-                                <input type="checkbox" value={elm} bind:group={formdata.nowang} onchange={() => clearError("nowang")} class="sr-only" />
-                                <span class="font-bold leading-tight whitespace-nowrap overflow-hidden {elm.length > 15 ? 'text-[9px]' : 'text-[11px]'}">{elm}</span>
-                            </label>
-                        {/each}
-                    </div>
-                {/if}
-            </div>
-
-            <div data-field="futureang" class="border-t border-slate-100 pt-4">
-                <button type="button" onclick={() => toggleSection('futureang')} class="flex items-center justify-between w-full">
-                    <div class="flex items-center gap-2 text-left">
-                        <span class="text-[11px] font-bold {formErrors.futureang ? 'text-red-500 animate-pulse' : 'text-orange-500'}">やってみたい釣り（必須）</span>
-                        {#if formdata.futureang.length > 0}
-                            <span class="bg-orange-100 text-orange-600 text-[10px] px-2 py-0.5 rounded-full font-bold">{formdata.futureang.length}</span>
-                        {/if}
-                    </div>
-                    <span class="text-slate-300 transition-transform {openSectionName === 'futureang' ? 'rotate-180 text-orange-500' : ''}">▼</span>
-                </button>
-                {#if openSectionName === 'futureang'}
-                    <div class="grid grid-cols-2 gap-2 mt-3 bg-orange-50 p-1">
-                        {#each selectAng as elm}
-                            <label class="flex items-center justify-center p-3 rounded-2xl border text-center transition-all {elm.length > 10 ? 'col-span-2' : ''} {formdata.futureang.includes(elm) ? 'bg-orange-600 border-orange-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500'}">
-                                <input type="checkbox" value={elm} bind:group={formdata.futureang} onchange={() => clearError("futureang")} class="sr-only" />
-                                <span class="font-bold leading-tight whitespace-nowrap overflow-hidden {elm.length > 15 ? 'text-[9px]' : 'text-[11px]'}">{elm}</span>
-                            </label>
-                        {/each}
-                    </div>
-                {/if}
-            </div>
-
-            <div data-field="look" class="border-t border-slate-100 pt-4">
+            <div data-field="look" class="border-t border-slate-100 pt-3">
                 <button type="button" onclick={() => toggleSection('look')} class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold {formErrors.look ? 'text-red-500 animate-pulse' : 'text-purple-500'}">イベントを何で知りましたか？（必須）</span>
+                        <span class="text-xs font-bold {formErrors.look ? 'text-red-500 animate-pulse' : 'text-purple-500'}">どこで知りましたか？（必須）</span>
                         {#if formdata.look}
-                            <span class="text-purple-600 text-[10px] font-bold truncate max-w-[120px]">: {formdata.look}</span>
-                        {/if}
+                        <span class="text-purple-600 text-[8px] font-bold truncate max-w-[120px] bg-purple-50 px-2 py-0.5 rounded-md">
+                            : {formdata.look}
+                        </span>
+                    {/if}
                     </div>
                     <span class="text-slate-300 transition-transform {openSectionName === 'look' ? 'rotate-180 text-purple-500' : ''}">▼</span>
                 </button>
                 {#if openSectionName === 'look'}
-                    <div class="flex flex-col gap-2 mt-3 bg-purple-50 p-1" >
+                    <div class="flex flex-col gap-1.5 mt-2 bg-purple-50 p-1.5 rounded-xl" >
                         {#each selectLook as opt}
-                            <label class="flex items-center justify-center p-3 rounded-2xl border text-center transition-all { (opt === 'その他' && isOtherSelected) || (opt !== 'その他' && formdata.look === opt && !isOtherSelected) ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500'}">
+                            <label class="flex items-center justify-center p-2.5 rounded-xl border text-center transition-all { (opt === 'その他' && isOtherSelected) || (opt !== 'その他' && formdata.look === opt && !isOtherSelected) ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500'}">
                                 <input type="radio" name="look_radio" checked={(opt === 'その他' && isOtherSelected) || (opt !== 'その他' && formdata.look === opt && !isOtherSelected)} onchange={() => handleLookChange(opt)} class="sr-only" />
-                                <span class="font-bold whitespace-nowrap overflow-hidden {opt.length > 12 ? 'text-[9px]' : 'text-[11px]'}">{opt}</span>
+                                <span class="font-bold {opt.length > 20 ? 'text-[11px]' : 'text-sm'}">{opt}</span>
                             </label>
                         {/each}
                         {#if isOtherSelected}
-                            <input type="text" bind:value={otherLook} oninput={() => { formdata.look = otherLook; }} placeholder="内容を入力" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-bold mt-1 outline-none" />
+                            <input type="text" bind:value={otherLook} oninput={() => { formdata.look = otherLook; }} placeholder="内容を入力" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-sm font-bold mt-1 outline-none focus:border-purple-500" />
                         {/if}
                     </div>
                 {/if}
             </div>
 
-            <div class="space-y-4 pt-4 border-t border-slate-100">
+            <div class="space-y-3 pt-3 border-t border-slate-100">
                 {#each [{f:'good_booth', l:'良かったメーカーブース'}, {f:'expectation', l:'メーカーに期待すること'}] as text}
-                <div data-field={text.f} class="space-y-2">
-                    <span class="text-[11px] font-bold text-slate-400 ml-1">{text.l}</span>
-                    <textarea bind:value={(formdata as any)[text.f]} placeholder="（任意）" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-xs font-bold min-h-[80px] resize-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <div data-field={text.f} class="space-y-1">
+                    <span class="text-[12px] font-bold text-slate-400 ml-1">{text.l}</span>
+                    <textarea bind:value={formdata[text.f as keyof typeof formdata]} placeholder="（任意）" class="w-full bg-slate-50 border-none p-3 rounded-xl text-sm font-bold min-h-[70px] resize-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
                 {/each}
             </div>
 
-            <!-- <div class="bg-blue-50/50 rounded-3xl p-6 text-center space-y-3" data-field="hosi">
-                <span class="text-xs font-bold {formErrors.hosi ? 'text-red-500' : 'text-slate-500'} tracking-widest">Satisfaction</span>
-                <div class="flex justify-center gap-2">
-                    {#each selectHosi as h}
-                        <button type="button" class="text-4xl transition-all {(formdata.hosi ?? 0) >= h ? 'text-yellow-400' : 'text-slate-200'}" onclick={() => { formdata.hosi = h; clearError("hosi"); }}>★</button>
-                    {/each}
-                </div>
-            </div> -->
-                <button 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 active:scale-95 text-base tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100" 
-                    type="submit"
-                    disabled={isSubmitting}
-                >
-                    {#if isSubmitting}
-                        送信中...
-                    {:else}
-                        抽選番号をゲット!
-                    {/if}
-                </button>
-       
+            <button 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg active:scale-95 text-lg tracking-widest transition-all disabled:opacity-50" 
+                type="submit"
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? '送信中...' : '抽選番号をゲット!'}
+            </button>
         </div>
     </div>
 </form>

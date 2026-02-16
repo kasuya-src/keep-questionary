@@ -11,7 +11,7 @@
     const now = new Date();
     const hour = now.getHours();
     // 判定結果（boolean）を代入
-    isopen = hour >= 9 && hour < 24;
+    isopen = hour >= 0 && hour < 24;
   }
 
   $effect(() => {
