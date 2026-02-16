@@ -532,7 +532,7 @@
                     <select 
                         bind:value={formdata[item.f as 'age'|'gender'|'area'|'history']} 
                         onchange={() => clearError(item.f)} 
-                        class="w-full bg-slate-100 border-none p-2.5 rounded-xl font-bold appearance-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full bg-slate-100 border-none p-2.5 rounded-xl　text-base font-bold appearance-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="" disabled selected hidden>選択</option>
                         {#each item.s as opt}
@@ -599,7 +599,8 @@
                         {#each section.select as elm}
                             <label class="flex items-center justify-center py-2.5 px-0 rounded-xl border text-center transition-all {elm.length > 10 && section.id !== 'meate' ? 'col-span-2' : ''} {(formdata[section.group as keyof typeof formdata] as any[]).includes(elm) ? `${section.activeBg} ${section.activeBorder} text-white shadow-sm` : 'bg-white border-slate-200 text-slate-500'}">
                                 <input type="checkbox" value={elm} bind:group={formdata[section.group as 'meate'|'nowang'|'futureang']} onchange={() => clearError(section.group)} class="sr-only" />
-                                <span class="font-bold leading-none whitespace-nowrap {elm.length > 25 ? 'text-[10px]' : elm.length > 18 ? 'text-[11px]' : elm.length > 8 ? 'text-[12px]' : 'text-sm'}">
+                                <span class="font-bold leading-none whitespace-nowrap 
+                                {elm.length > 25 ? 'text-[11px]' : elm.length > 21 ? 'text-sm' : ""}">
                                     {elm}
                                 </span>
                             </label>
@@ -626,7 +627,7 @@
                         {#each selectLook as opt}
                             <label class="flex items-center justify-center p-2.5 rounded-xl border text-center transition-all { (opt === 'その他' && isOtherSelected) || (opt !== 'その他' && formdata.look === opt && !isOtherSelected) ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500'}">
                                 <input type="radio" name="look_radio" checked={(opt === 'その他' && isOtherSelected) || (opt !== 'その他' && formdata.look === opt && !isOtherSelected)} onchange={() => handleLookChange(opt)} class="sr-only" />
-                                <span class="font-bold {opt.length > 20 ? 'text-[11px]' : 'text-sm'}">{opt}</span>
+                                <span class="font-bold ">{opt}</span>
                             </label>
                         {/each}
                         {#if isOtherSelected}
@@ -640,7 +641,8 @@
                 {#each [{f:'good_booth', l:'良かったメーカーブース'}, {f:'expectation', l:'メーカーに期待すること'}] as text}
                 <div data-field={text.f} class="space-y-1">
                     <span class="text-sm font-bold text-slate-400 ml-1">{text.l}</span>
-                    <textarea bind:value={formdata[text.f as keyof typeof formdata]} placeholder="（任意）" class="w-full bg-slate-50 border-none p-3 rounded-xl text-sm font-bold min-h-[70px] resize-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    <textarea bind:value={formdata[text.f as keyof typeof formdata]} placeholder="（任意）" 
+                    class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold min-h-[70px] resize-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
                 {/each}
             </div>
