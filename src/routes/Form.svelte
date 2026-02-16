@@ -528,11 +528,11 @@
                     {l:'釣歴', f:'history', s:selectHistory}
                 ] as item}
                 <div data-field={item.f} class="space-y-0.5">
-                    <span class="text-xs font-bold {formErrors[item.f as keyof FormErrors] ? 'text-red-500' : 'text-slate-400'} ml-1">{item.l}</span>
+                    <span class="text-sm font-bold {formErrors[item.f as keyof FormErrors] ? 'text-red-500' : 'text-slate-400'} ml-1">{item.l}</span>
                     <select 
                         bind:value={formdata[item.f as 'age'|'gender'|'area'|'history']} 
                         onchange={() => clearError(item.f)} 
-                        class="w-full bg-slate-100 border-none p-2.5 rounded-xl text-sm font-bold appearance-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full bg-slate-100 border-none p-2.5 rounded-xl font-bold appearance-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="" disabled selected hidden>選択</option>
                         {#each item.s as opt}
@@ -583,7 +583,7 @@
             <div data-field={section.id} class="border-t border-slate-100 pt-3">
                 <button type="button" onclick={() => toggleSection(section.id)} class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold {formErrors[section.id] ? 'text-red-500 animate-pulse' : section.colorClass}">
+                        <span class="text-sm font-bold {formErrors[section.id] ? 'text-red-500 animate-pulse' : section.colorClass}">
                             {section.label} 
                         </span>
                         {#if (formdata[section.group as keyof typeof formdata] as any[]).length > 0}
@@ -612,7 +612,7 @@
             <div data-field="look" class="border-t border-slate-100 pt-3">
                 <button type="button" onclick={() => toggleSection('look')} class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold {formErrors.look ? 'text-red-500 animate-pulse' : 'text-purple-500'}">どこで知りましたか？（必須）</span>
+                        <span class="text-sm font-bold {formErrors.look ? 'text-red-500 animate-pulse' : 'text-purple-500'}">どこで知りましたか？（必須）</span>
                         {#if formdata.look}
                         <span class="text-purple-600 text-[8px] font-bold truncate max-w-[120px] bg-purple-50 px-2 py-0.5 rounded-md">
                             : {formdata.look}
@@ -639,7 +639,7 @@
             <div class="space-y-3 pt-3 border-t border-slate-100">
                 {#each [{f:'good_booth', l:'良かったメーカーブース'}, {f:'expectation', l:'メーカーに期待すること'}] as text}
                 <div data-field={text.f} class="space-y-1">
-                    <span class="text-[12px] font-bold text-slate-400 ml-1">{text.l}</span>
+                    <span class="text-sm font-bold text-slate-400 ml-1">{text.l}</span>
                     <textarea bind:value={formdata[text.f as keyof typeof formdata]} placeholder="（任意）" class="w-full bg-slate-50 border-none p-3 rounded-xl text-sm font-bold min-h-[70px] resize-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
                 {/each}
