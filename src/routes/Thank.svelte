@@ -66,7 +66,7 @@
     import { localdata, pageNo } from "$lib/store";
 
     const daytime = $localdata.time;
-    const lastnum = String(daytime).slice(-8);
+    const lastnum = String(daytime).substring(3, 9);
 
     let lastTap = 0;
     const doubleTapThreshold = 300;

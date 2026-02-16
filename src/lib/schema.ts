@@ -9,13 +9,15 @@ export const QuestionnaireSchema = z.object({
   nowang: z.array(z.string()).min(1,"※1つ以上選択してください"),
   futureang: z.array(z.string()).min(1,"※1つ以上選択してください"),
   history:z.string().min(1,"※1つ以上選択してください"),
-
-  hosi: z
-  .coerce
-  .number()
-  .refine((v) => v >= 1 && v <= 5, {
-    message: "※1つ以上選択してください",
-  })
+  look: z.string().min(1, "選択してください"), 
+    good_booth: z.string().optional(),
+    expectation: z.string().optional()
+  // hosi: z
+  // .coerce
+  // .number()
+  // .refine((v) => v >= 1 && v <= 5, {
+  //   message: "※1つ以上選択してください",
+  // })
 });
 
 

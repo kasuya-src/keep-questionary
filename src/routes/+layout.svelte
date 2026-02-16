@@ -6,8 +6,8 @@
 </script>
 
 <div class="flex flex-col h-screen items-center">
-	<img class="w-50" src="/図2.png" alt="logo" />
-	<div class="flex-1 overflow-auto">
+	<!-- <img class="w-50" src="/図2.png" alt="logo" />
+	<div class="flex-1"> -->
 		{@render children()}
-	</div>
+	<!-- </div> -->
 </div>
